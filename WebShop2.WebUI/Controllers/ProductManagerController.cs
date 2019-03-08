@@ -5,17 +5,21 @@ using System.Web;
 using System.Web.Mvc;
 using WebShop2.DataAccess.InMemory;
 using WebShop2.Core.Models;
-
+using WebShop2.Core.ViewModels;
 
 namespace WebShop2.WebUI.Controllers
 {
     public class ProductManagerController : Controller
     {
         public ProductRepository context;
+        public ProductCategoryViewModel categories;
+        public ProductCategoryRepository categoryContext;
         // GET: ProductManager
         public ProductManagerController()
         {
             context = new ProductRepository();
+            categories = new ProductCategoryViewModel();
+            categoryContext = new ProductCategoryRepository();
         }
         public ActionResult Index()
         {
@@ -37,7 +41,12 @@ namespace WebShop2.WebUI.Controllers
 
         public ActionResult Create()
         {
-            return View();
+            ProductCategoryViewModel productCategoryViewModel = new ProductCategoryViewModel();
+            productCategoryViewModel.Product = new Product();
+            productCategoryViewModel.Categories = categoryContext.productCategories;
+            productCategoryViewModel.Categories.AsQueryable();
+            Product product = new Product();
+            return View(productCategoryViewModel);
             
         }
 
@@ -65,12 +74,13 @@ namespace WebShop2.WebUI.Controllers
         [HttpPost]
         public ActionResult Edit(string id, Product product)
         {
-            
-            Product productToEdit = context.products.Find(p=>p.ID==id);
-            productToEdit.Name = product.Name;
-            productToEdit.Price = product.Price;
-            productToEdit.Category = product.Category;
-            productToEdit.Image = product.Image;
+            ProductCategoryViewModel productViewModel = new ProductCategoryViewModel();
+            productViewModel.Product = context.products.Find(p=>p.ID==id);
+            productViewModel.Categories = categoryContext.productCategories.ToList().AsQueryable();
+            productViewModel.Product.Name = product.Name;
+            productViewModel.Product.Price = product.Price;
+            productViewModel.Product.Category = product.Category;
+            productViewModel.Product.Image = product.Image;
             context.Commit();
             return RedirectToAction("Index");
         }
